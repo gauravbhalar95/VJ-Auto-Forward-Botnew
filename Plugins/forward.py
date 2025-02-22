@@ -1,25 +1,23 @@
-# Don't Remove Credit @VJ_Botz
-# Subscribe YouTube Channel For Amazing Bot @Tech_VJ
-# Ask Doubt on telegram @KingVJ01
-
 import logging
+from pyrogram import Client, filters
+from config import Config
+
+# Set up logging
 logger = logging.getLogger(__name__)
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
-import asyncio
-from pyrogram import filters
-from bot import channelforward
-from config import Config 
+# Initialize bot
+bot = Client("AutoForwardBot", api_id=Config.API_ID, api_hash=Config.API_HASH, bot_token=Config.BOT_TOKEN)
 
-@channelforward.on_message(filters.channel)
-async def forward(client, message):
-    # Forwarding the messages to the channel
-   try:
-      for id in Config.CHANNEL:
-         from_channel, to_channel = id.split(":")
-         if message.chat.id == int(from_channel):
-            func = message.copy if Config.AS_COPY else message.forward
-            await func(int(to_channel), Config.AS_COPY)
-            logger.info("Forwarded a message from", from_channel, "to", to_channel)
-            await asyncio.sleep(1)
-   except Exception as e:
-      logger.exception(e)
+@bot.on_message(filters.channel)
+async def forward_messages(client, message):
+    try:
+        pickup_id = str(message.chat.id)
+        for mapping in Config.CHANNEL:
+            from_channel, to_channel = mapping.split(":")
+            if pickup_id == from_channel:
+                func = message.copy if Config.AS_COPY else message.forward
+                await func(int(to_channel))
+                logger.info(f"Forwarded message from {from_channel} to {to_channel}")
+    except Exception as e:
+        logger.exception(f"Error forwarding message: {e}")
